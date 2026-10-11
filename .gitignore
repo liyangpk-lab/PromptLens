@@ -1,0 +1,21 @@
+# 构建产物
+build/
+*.apk
+*.aab
+
+# Gradle / Kotlin 缓存
+.gradle/
+.gradle-home/
+.kotlin/
+
+# 本机环境（含调试签名，不要上传）
+.android-home/
+local.properties
+*.keystore
+*.jks
+
+# IDE / 系统
+.idea/
+*.iml
+.DS_Store
+RELEASE_NOTES_*.md
