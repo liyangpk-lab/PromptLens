@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
@@ -103,7 +104,7 @@ fun DetailScreen(
     BackHandler(onBack = onBack)
     val pager = rememberPagerState(initialPage = start) { images.size }
     val cache = remember { mutableStateMapOf<Uri, ImageMeta>() }
-    var fullscreen by remember { mutableStateOf<Uri?>(null) }
+    var fullscreen by remember { mutableStateOf<Int?>(null) }   // 全屏看图时的起始页
     val cur = images.getOrNull(pager.currentPage)
 
     Scaffold(
@@ -143,7 +144,7 @@ fun DetailScreen(
                 AsyncImage(
                     model = e.uri, contentDescription = e.name, contentScale = ContentScale.Fit,
                     modifier = Modifier.fillMaxWidth().heightIn(max = 380.dp).clip(RoundedCornerShape(12.dp))
-                        .clickable { fullscreen = e.uri },
+                        .clickable { fullscreen = page },
                 )
                 Spacer(Modifier.height(10.dp))
                 if (meta == null) {
@@ -156,14 +157,12 @@ fun DetailScreen(
         }
     }
 
-    fullscreen?.let { uri ->
-        androidx.compose.ui.window.Dialog(
-            onDismissRequest = { fullscreen = null },
-            properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
-        ) {
-            Box(Modifier.fillMaxSize().background(Color.Black).clickable { fullscreen = null }) {
-                AsyncImage(model = uri, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
-            }
+    val scope = rememberCoroutineScope()
+    fullscreen?.let { startPage ->
+        ZoomViewer(images, startPage) { last ->
+            fullscreen = null
+            // 全屏里翻到哪张，回到详情页就停在哪张
+            if (last != pager.currentPage) scope.launch { pager.scrollToPage(last) }
         }
     }
 }
